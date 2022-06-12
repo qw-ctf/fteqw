@@ -320,6 +320,47 @@ void Stats_FragMessage(int p1, int wid, int p2, qboolean teamkill)
 	Con_PrintCon(tracker, message, tracker->parseflags);
 }
 
+void Stats_FlagMessage(fragfilemsgtypes_t type, int p1, int count)
+{
+	char message[512];
+	console_t *tracker;
+
+	const char *p1n = cl.players[p1].name;
+
+	const char *c = S_COLOR_WHITE;
+	const char *fc = !stricmp(cl.players[p1].team, "red") ? S_COLOR_BLUE : S_COLOR_RED;
+	const char *fn = !stricmp(cl.players[p1].team, "red") ? "blue" : "red";
+
+	if (!r_tracker_frags.ival || cls.demoseeking)
+		return;
+
+	if (type == ff_flagcaps) {
+		Q_snprintfz(message, sizeof(message), "%s%s captured the %s%s%s flag! (%d captures)\n", c, p1n, fc, fn, c, count);
+	}
+	else if (type == ff_flagdrops) {
+		Q_snprintfz(message, sizeof(message), "%s%s dropped the %s%s%s flag! (%d drops)\n", c, p1n, fc, fn, c, count);
+	}
+	else if (type == ff_flagtouch) {
+		Q_snprintfz(message, sizeof(message), "%s%s took the %s%s%s flag! (%d takes)\n", c, p1n, fc, fn, c, count);
+	} else {
+		return;
+	}	
+
+	tracker = Con_FindConsole("tracker");
+	if (!tracker)
+	{
+		tracker = Con_Create("tracker", CONF_HIDDEN|CONF_NOTIFY|CONF_NOTIFY_RIGHT|CONF_NOTIFY_BOTTOM);
+		//this stuff should be configurable
+		tracker->notif_l = tracker->maxlines = 8;
+		tracker->notif_x = 0.5;
+		tracker->notif_y = 0.333;
+		tracker->notif_w = 1-tracker->notif_x;
+		tracker->notif_t = 4;
+		tracker->notif_fade = 1;
+	}
+	Con_PrintCon(tracker, message, tracker->parseflags);
+}
+
 void Stats_Evaluate(fragfilemsgtypes_t mt, int wid, int p1, int p2)
 {
 	qboolean u1;
@@ -422,30 +463,21 @@ void Stats_Evaluate(fragfilemsgtypes_t mt, int wid, int p1, int p2)
 		fragstats.clienttotals[p1].grabs++;
 		fragstats.totaltouches++;
 
-		if (u1 && p1 >= 0)
-		{
-			Stats_Message("You grabbed the flag\nflag grabs: %i (%i)\n", fragstats.clienttotals[p1].grabs, fragstats.totaltouches);
-		}
+		Stats_FlagMessage(ff_flagtouch, p1, fragstats.clienttotals[p1].grabs);
 		break;
 	case ff_flagcaps:
 		if (p1 >= 0)
 			fragstats.clienttotals[p1].caps++;
 		fragstats.totalcaps++;
 
-		if (u1 && p1 >= 0)
-		{
-			Stats_Message("You captured the flag\nflag captures: %i (%i)\n", fragstats.clienttotals[p1].caps, fragstats.totalcaps);
-		}
+		Stats_FlagMessage(ff_flagcaps, p1, fragstats.clienttotals[p1].caps);
 		break;
 	case ff_flagdrops:
 		if (p1 >= 0)
 			fragstats.clienttotals[p1].drops++;
 		fragstats.totaldrops++;
 
-		if (u1 && p1 >= 0)
-		{
-			Stats_Message("You dropped the flag\nflag drops: %i (%i)\n", fragstats.clienttotals[p1].drops, fragstats.totaldrops);
-		}
+		Stats_FlagMessage(ff_flagdrops, p1, fragstats.clienttotals[p1].drops);
 		break;
 
 	//p1 died, p2 killed
