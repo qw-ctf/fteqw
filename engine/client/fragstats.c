@@ -270,7 +270,7 @@ void Stats_FragMessage(int p1, int wid, int p2, qboolean teamkill)
 	char *p1c = S_COLOR_WHITE;
 	char *p2c = S_COLOR_WHITE;
 
-	if (!r_tracker_frags.ival)
+	if (!r_tracker_frags.ival || cls.demoseeking)
 		return;
 	if (r_tracker_frags.ival < 2)
 		if (p1 != localplayer && p2 != localplayer)

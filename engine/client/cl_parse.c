@@ -6604,8 +6604,9 @@ static void CL_ParsePrint(char *msg, int level)
 		n = msg[1];
 		msg[1] = 0;
 
-		if (!cls.demoseeking)
-		{
+//      QTube wants all the stats
+//		if (!cls.demoseeking)
+//		{
 			if (level == PRINT_CHAT)
 			{
 				char *body;
@@ -6615,7 +6616,7 @@ static void CL_ParsePrint(char *msg, int level)
 				if (!TP_SuppressMessage(printtext))
 				{
 					body = CL_ParseChat(printtext, &plr, &msgflags);
-					if (body)
+					if (body && !cls.demoseeking)
 						CL_PrintChat(plr, body, msgflags);
 				}
 			}
@@ -6636,7 +6637,7 @@ static void CL_ParsePrint(char *msg, int level)
 #endif
 							CL_PrintStandardMessage(printtext, level);
 			}
-		}
+//		}
 
 		TP_SearchForMsgTriggers(printtext, level);
 		msg[1] = n;
