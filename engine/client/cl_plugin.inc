@@ -839,6 +839,7 @@ static void QDECL Plug_GetLocationName(const float *locpoint, char *outbuffer, s
 }
 
 #ifdef QUAKEHUD
+#define CTF_MASK (IT_KEY1 | IT_KEY2 | IT_SIGIL1 | IT_SIGIL2 | IT_SIGIL3 | IT_SIGIL4)
 static size_t QDECL Plug_GetTeamInfo(teamplayerinfo_t *players, size_t maxplayers, qboolean showenemies, int seat)
 {
 	int count = 0;
@@ -891,7 +892,8 @@ static size_t QDECL Plug_GetTeamInfo(teamplayerinfo_t *players, size_t maxplayer
 		else if (cls.demoplayback == DPB_MVD || cls.demoplayback == DPB_EZTV)
 		{
 			// QTube: Grab items from teaminfo to track individual flag and rune status.
-			players->items = cl.players[i].tinfo.items;
+			unsigned int items = cl.players[i].stats[STAT_ITEMS];
+			players->items = (items & ~CTF_MASK) | (pl->tinfo.items & CTF_MASK);
 			//scrape it from the mvd (assuming there is one...
 			players->armor = cl.players[i].statsf[STAT_ARMOR];
 			players->health = cl.players[i].statsf[STAT_HEALTH];
