@@ -6022,6 +6022,19 @@ static int SCR_HudDrawTeamInfoPlayer(teamplayerinfo_t *ti_cl, int x, int y, int 
                 }
                 x += FONTWIDTH * scale;
                 break;
+			case 'r':
+				if (!width_only) {
+					if (ti_cl->items & IT_SIGIL1)
+						Draw_SPic(x, y, sb_sigil[0], 1.0f / 2 * scale);
+					else if (ti_cl->items & IT_SIGIL2)
+						Draw_SPic(x, y, sb_sigil[1], 1.0f / 2 * scale);
+					else if (ti_cl->items & IT_SIGIL3)
+						Draw_SPic(x, y, sb_sigil[2], 1.0f / 2 * scale);
+					else if (ti_cl->items & IT_SIGIL4)
+						Draw_SPic(x, y, sb_sigil[3], 1.0f / 2 * scale);
+				}
+				x += FONTWIDTH * scale;
+				break;
 			case '%': // wow, %% result in one %, how smart
 
 				if(!width_only)

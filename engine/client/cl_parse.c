@@ -5790,7 +5790,7 @@ static void CL_ServerInfo (void)
 CL_SetStat
 =====================
 */
-static void CL_SetStat_Internal (int pnum, int stat, int ivalue, float fvalue)
+void CL_SetStat_Internal (int pnum, int stat, int ivalue, float fvalue)
 {
 	if (cl.playerview[pnum].stats[stat] != ivalue)
 		Sbar_Changed ();
@@ -6737,6 +6737,7 @@ static void CL_ParseItemTimer(void)
 }
 
 #ifdef PLUGINS
+#define CTF_MASK (IT_KEY1 | IT_KEY2 | IT_SIGIL1 | IT_SIGIL2 | IT_SIGIL3 | IT_SIGIL3)
 static void CL_ParseTeamInfo(void)
 {
 	unsigned int pidx = atoi(Cmd_Argv(1));
@@ -6757,7 +6758,7 @@ static void CL_ParseTeamInfo(void)
 		pl->tinfo.time = cl.time+5;
 		pl->tinfo.health = health;
 		pl->tinfo.armour = armour;
-		pl->tinfo.items = items;
+		pl->tinfo.items = (pl->tinfo.items & CTF_MASK) | (items & ~CTF_MASK);
 		VectorCopy(org, pl->tinfo.org);
 		Q_strncpyz(pl->tinfo.nick, nick, sizeof(pl->tinfo.nick));
 	}

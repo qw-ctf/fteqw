@@ -14,6 +14,10 @@ typedef enum {
 	ff_flagtouch,
 	ff_flagcaps,
 	ff_flagdrops,
+	ff_rune_res,
+	ff_rune_str,
+	ff_rune_hst,
+	ff_rune_reg,
 
 	//two componant
 	ff_frags,		//must be the first of the two componant
@@ -324,7 +328,7 @@ void Stats_FragMessage(int p1, int wid, int p2, qboolean teamkill)
 
 void Update_FlagStatus(int pidx, char *team, int got_flag)
 {
-	int flag = IT_KEY1 | IT_KEY2;
+	unsigned int flag = IT_KEY1 | IT_KEY2;
 	player_info_t *pl = &cl.players[pidx];
 
 	if (!strcmp(team, "blue")) {
@@ -363,7 +367,29 @@ void Stats_FlagMessage(fragfilemsgtypes_t type, int p1, int count)
 	else if (type == ff_flagtouch) {
 		Q_snprintfz(message, sizeof(message), "%s%s took the %s%s%s flag! (%d takes)\n", c, p1n, fc, fn, c, count);
 	} else {
-		return;
+		const char *rune = NULL;
+		const char *rc = NULL;
+		switch (type) {
+			case ff_rune_res:
+				rune = "Resistance";
+				rc = S_COLOR_GREEN;
+				break;
+			case ff_rune_str:
+				rune = "Strength";
+				rc = S_COLOR_RED;
+				break;
+			case ff_rune_hst:
+				rune = "Haste";
+				rc = S_COLOR_YELLOW;
+				break;
+			case ff_rune_reg:
+				rune = "Regeneration";
+				rc = S_COLOR_CYAN;
+				break;
+			default:
+				return;
+		}
+		Q_snprintfz(message, sizeof(message), "%s%s took the %s%s%s rune!\n", c, p1n, rc, rune, c);
 	}	
 
 	tracker = Con_FindConsole("tracker");
@@ -379,6 +405,39 @@ void Stats_FlagMessage(fragfilemsgtypes_t type, int p1, int count)
 		tracker->notif_fade = 1;
 	}
 	Con_PrintCon(tracker, message, tracker->parseflags);
+}
+
+// QTube
+void CL_SetStat_Internal (int pnum, int stat, int ivalue, float fvalue);
+
+static void Stats_SyncRuneView(int pnum)
+{
+	int i;
+
+	for (i = 0; i < MAX_SPLITS; i++) {
+		if (cl.playerview[i].cam_spec_track == pnum && cl.playerview[i].cam_state != CAM_FREECAM)
+			CL_SetStat_Internal(i, STAT_ITEMS, cl.players[pnum].stats[STAT_ITEMS], 0.0f);
+	}
+}
+
+#define RUNE_MASK (IT_SIGIL1 | IT_SIGIL2 | IT_SIGIL3 | IT_SIGIL4)
+
+static void Stats_SetRune(int pnum, int rune)
+{
+	int i;
+	// Only one person can have a specific rune, and this rune status
+	// based on messages is a bit hacky, always clear everyone else.
+	for (i = 0; i < MAX_CLIENTS; i++) {
+		cl.players[i].stats[STAT_ITEMS] &= ~rune;
+		cl.players[i].tinfo.items &= ~rune;
+	}
+	// Can only have one rune at a time
+	cl.players[pnum].stats[STAT_ITEMS] &= ~RUNE_MASK;
+	cl.players[pnum].stats[STAT_ITEMS] |= rune;
+	cl.players[pnum].tinfo.items &= ~RUNE_MASK;
+	cl.players[pnum].tinfo.items |= rune;
+
+	Stats_SyncRuneView(pnum);
 }
 
 void Stats_Evaluate(fragfilemsgtypes_t mt, int wid, int p1, int p2)
@@ -416,6 +475,10 @@ void Stats_Evaluate(fragfilemsgtypes_t mt, int wid, int p1, int p2)
 			fragstats.clienttotals[p1].deaths++;
 		fragstats.totaldeaths++;
 
+		// QTube: Clear rune status on death
+		cl.players[p1].stats[STAT_ITEMS] &= ~RUNE_MASK;
+		cl.players[p1].tinfo.items &= ~RUNE_MASK;
+		Stats_SyncRuneView(p1);
 		Stats_FragMessage(p1, wid, -3, true);
 
 		if (u1)
@@ -439,6 +502,10 @@ void Stats_Evaluate(fragfilemsgtypes_t mt, int wid, int p1, int p2)
 		fragstats.totalsuicides++;
 		fragstats.totaldeaths++;
 
+		// QTube: Clear rune status on death
+		cl.players[p1].stats[STAT_ITEMS] &= ~RUNE_MASK;
+		cl.players[p1].tinfo.items &= ~RUNE_MASK;
+		Stats_SyncRuneView(p1);
 		Stats_FragMessage(p1, wid, -2, true);
 		if (u1)
 			Stats_Message("You killed your own dumb self\n%s suicides: %i (%i)\n", fragstats.weapontotals[wid].fullname, fragstats.weapontotals[wid].ownsuicides, fragstats.weapontotals[wid].suicides);
@@ -502,7 +569,22 @@ void Stats_Evaluate(fragfilemsgtypes_t mt, int wid, int p1, int p2)
 		Update_FlagStatus(p1, cl.players[p1].team, false);
 		Stats_FlagMessage(ff_flagdrops, p1, fragstats.clienttotals[p1].drops);
 		break;
-
+	case ff_rune_res:
+		Stats_SetRune(p1, IT_SIGIL1);
+		Stats_FlagMessage(ff_rune_res, p1, 0);
+		break;
+	case ff_rune_str:
+		Stats_SetRune(p1, IT_SIGIL2);
+		Stats_FlagMessage(ff_rune_str, p1, 0);
+		break;
+	case ff_rune_hst:
+		Stats_SetRune(p1, IT_SIGIL3);
+		Stats_FlagMessage(ff_rune_hst, p1, 0);
+		break;
+	case ff_rune_reg:
+		Stats_SetRune(p1, IT_SIGIL4);
+		Stats_FlagMessage(ff_rune_reg, p1, 0);
+		break;
 	//p1 died, p2 killed
 	case ff_frags:
 	case ff_fragedby:
@@ -529,7 +611,10 @@ void Stats_Evaluate(fragfilemsgtypes_t mt, int wid, int p1, int p2)
 			if (p1 >= 0 && p2 >= 0)
 				Stats_Message("You killed %s\n%s kills: %i (%i/%i)\n", cl.players[p1].name, fragstats.weapontotals[wid].fullname, fragstats.clienttotals[p2].kills, fragstats.weapontotals[wid].kills, fragstats.totalkills);
 		}
-
+		// QTube: Clear rune status on death
+		cl.players[p1].stats[STAT_ITEMS] &= ~RUNE_MASK;
+		cl.players[p1].tinfo.items &= ~RUNE_MASK;
+		Stats_SyncRuneView(p1);
 		Stats_FragMessage(p1, wid, p2, false);
 		break;
 	case ff_tkdeath:
@@ -546,6 +631,10 @@ void Stats_Evaluate(fragfilemsgtypes_t mt, int wid, int p1, int p2)
 		fragstats.clienttotals[p1].deaths++;
 		fragstats.totaldeaths++;
 
+		// QTube: Clear rune status on death
+		cl.players[p1].stats[STAT_ITEMS] &= ~RUNE_MASK;
+		cl.players[p1].tinfo.items &= ~RUNE_MASK;
+		Stats_SyncRuneView(p1);
 		Stats_FragMessage(p1, wid, -1, true);
 
 		if (u1)
@@ -585,8 +674,15 @@ void Stats_Evaluate(fragfilemsgtypes_t mt, int wid, int p1, int p2)
 		fragstats.totalteamkills++;
 
 		Stats_FragMessage(p1, wid, p2, false);
-		if (u1 && p2 >= 0)
+
+		// QTube: Clear rune status on death
+		cl.players[p1].stats[STAT_ITEMS] &= ~RUNE_MASK;
+		cl.players[p1].tinfo.items &= ~RUNE_MASK;
+		Stats_SyncRuneView(p1);
+
+		if (u1 && p2 >= 0) {
 			Stats_Message("%s killed you\n%s deaths: %i (%i/%i)\n", cl.players[p2].name, fragstats.weapontotals[wid].fullname, fragstats.clienttotals[p2].owndeaths, fragstats.weapontotals[wid].owndeaths, fragstats.totaldeaths);
+		}
 		if (u2 && p1 >= 0 && p2 >= 0)
 		{
 			Stats_OwnFrag(cl.players[p1].name);
@@ -803,6 +899,18 @@ static void Stats_LoadFragFile(char *name)
 
 				Stats_StatMessage(fftype, 0, Cmd_Argv(3), NULL);
 			}
+			else if (!stricmp(tk, "rune_msg"))
+			{
+				int runetype;
+				tk = Cmd_Argv(2);
+					 if (!stricmp(tk, "X_RUNE_RES"))		{runetype = ff_rune_res;Con_Printf("resistance\n");}
+				else if (!stricmp(tk, "X_RUNE_STR"))		{runetype = ff_rune_str;Con_Printf("strength\n");}
+				else if (!stricmp(tk, "X_RUNE_HST"))		{runetype = ff_rune_hst;Con_Printf("haste\n");}
+				else if (!stricmp(tk, "X_RUNE_REG"))		{runetype = ff_rune_reg;Con_Printf("regeneration\n");}
+				else {Con_Printf("Unrecognised rune message \"%s\"\n", tk);continue;}
+
+				Stats_StatMessage(runetype, 0, Cmd_Argv(3), NULL);
+			}
 			else
 			{Con_Printf("Unrecognised directive \"%s\"\n", tk);continue;}
 		}
@@ -892,7 +1000,9 @@ qboolean Stats_ParsePrintLine(const char *line)
 	p1 = Stats_ExtractName(&line);
 	if (p1<0)	//reject it.
 	{
-		return false;
+		// QTube: Might be a dem_single for runes, default to last player, msg: "You got..."
+		extern int cls_lastto;
+		p1 = cls_lastto;
 	}
 	
 	for (ms = fragstats.message; ms; ms = ms->next)
