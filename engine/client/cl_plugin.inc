@@ -889,8 +889,10 @@ static size_t QDECL Plug_GetTeamInfo(teamplayerinfo_t *players, size_t maxplayer
 			Q_strncpyz(players->nick, "", sizeof(players->nick));
 		}
 		else if (cls.demoplayback == DPB_MVD || cls.demoplayback == DPB_EZTV)
-		{	//scrape it from the mvd (assuming there is one...
-			players->items = cl.players[i].stats[STAT_ITEMS];
+		{
+			// QTube: Grab items from teaminfo to track individual flag and rune status.
+			players->items = cl.players[i].tinfo.items;
+			//scrape it from the mvd (assuming there is one...
 			players->armor = cl.players[i].statsf[STAT_ARMOR];
 			players->health = cl.players[i].statsf[STAT_HEALTH];
 			Q_strncpyz(players->nick, "", sizeof(players->nick));

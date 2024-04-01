@@ -320,6 +320,24 @@ void Stats_FragMessage(int p1, int wid, int p2, qboolean teamkill)
 	Con_PrintCon(tracker, message, tracker->parseflags);
 }
 
+void Update_FlagStatus(int pidx, char *team, int got_flag)
+{
+	int flag = IT_KEY1 | IT_KEY2;
+	player_info_t *pl = &cl.players[pidx];
+
+	if (!strcmp(team, "blue")) {
+		flag = IT_KEY2;
+	} else if (!strcmp(team, "red")) {
+		flag = IT_KEY1;
+	}
+
+	if (got_flag) {
+		pl->tinfo.items |= flag;
+	} else {
+		pl->tinfo.items &= ~flag;
+	}
+}
+
 void Stats_FlagMessage(fragfilemsgtypes_t type, int p1, int count)
 {
 	char message[512];
@@ -463,6 +481,7 @@ void Stats_Evaluate(fragfilemsgtypes_t mt, int wid, int p1, int p2)
 		fragstats.clienttotals[p1].grabs++;
 		fragstats.totaltouches++;
 
+		Update_FlagStatus(p1, cl.players[p1].team, true);
 		Stats_FlagMessage(ff_flagtouch, p1, fragstats.clienttotals[p1].grabs);
 		break;
 	case ff_flagcaps:
@@ -470,6 +489,7 @@ void Stats_Evaluate(fragfilemsgtypes_t mt, int wid, int p1, int p2)
 			fragstats.clienttotals[p1].caps++;
 		fragstats.totalcaps++;
 
+		Update_FlagStatus(p1, cl.players[p1].team, false);
 		Stats_FlagMessage(ff_flagcaps, p1, fragstats.clienttotals[p1].caps);
 		break;
 	case ff_flagdrops:
@@ -477,6 +497,7 @@ void Stats_Evaluate(fragfilemsgtypes_t mt, int wid, int p1, int p2)
 			fragstats.clienttotals[p1].drops++;
 		fragstats.totaldrops++;
 
+		Update_FlagStatus(p1, cl.players[p1].team, false);
 		Stats_FlagMessage(ff_flagdrops, p1, fragstats.clienttotals[p1].drops);
 		break;
 

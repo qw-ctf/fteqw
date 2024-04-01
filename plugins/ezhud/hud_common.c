@@ -5999,7 +5999,29 @@ static int SCR_HudDrawTeamInfoPlayer(teamplayerinfo_t *ti_cl, int x, int y, int 
 				}
 				x += FONTWIDTH * scale; // will break if tracknumber is double digits
 				break;
-
+            case 'c':
+                switch (HUD_FindVar(hud,"flag_style")->ival) {
+                    case 1:
+                        if (!width_only) {
+                            if (ti_cl->items & IT_KEY1) {
+                                Draw_SPic(x, y, sb_items[0], 1.0f/3);
+                            } else if (ti_cl->items & IT_KEY2) {
+                                Draw_SPic(x, y, sb_items[1], 1.0f/3);
+                            }
+                        }
+                        break;
+                    case 2:
+                        if (!width_only) {
+                            if (ti_cl->items & IT_KEY1) {
+                                Draw_SString(x, y, "&cf00B", scale);
+                            } else if (ti_cl->items & IT_KEY2) {
+                                Draw_SString(x, y, "&c00fR", scale);
+                            }
+                        }
+                        break;
+                }
+                x += FONTWIDTH * scale;
+                break;
 			case '%': // wow, %% result in one %, how smart
 
 				if(!width_only)
@@ -8564,6 +8586,7 @@ void CommonDraw_Init(void)
 		"low_health","25",
 		"armor_style","3",
 		"weapon_style","0",
+        "flag_style","1",
 		"show_enemies","0",
 		"show_self","1",
 		"scale","1",

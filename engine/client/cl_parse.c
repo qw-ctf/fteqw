@@ -5913,6 +5913,8 @@ static void CL_SetStatMovevar(int pnum, int stat, int ivalue, float value)
 }
 #endif
 
+#define ITEM_MASK (IT_KEY1 | IT_KEY2 | IT_SIGIL1 | IT_SIGIL2 | IT_SIGIL3 | IT_SIGIL3)
+
 //the two values are expected to be the same, they're just both provided for precision.
 static void CL_SetStatNumeric (int pnum, int stat, int ivalue, float fvalue)
 {
@@ -5936,6 +5938,11 @@ static void CL_SetStatNumeric (int pnum, int stat, int ivalue, float fvalue)
 		extern int cls_lastto;
 		cl.players[cls_lastto].stats[stat]=ivalue;
 		cl.players[cls_lastto].statsf[stat]=fvalue;
+
+		// QTube: Also update teaminfo, but avoid overwriting flags and runes
+		if (stat == STAT_ITEMS) {
+			cl.players[cls_lastto].tinfo.items = (cl.players[cls_lastto].tinfo.items & ITEM_MASK) | (ivalue & ~ITEM_MASK);
+		}
 
 		if (cl_shownet.value == 3)
 			Con_Printf("\t%i: %i=%g\n", cls_lastto, stat, fvalue);
