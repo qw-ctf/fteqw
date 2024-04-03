@@ -5913,7 +5913,7 @@ static void CL_SetStatMovevar(int pnum, int stat, int ivalue, float value)
 }
 #endif
 
-#define ITEM_MASK (IT_KEY1 | IT_KEY2 | IT_SIGIL1 | IT_SIGIL2 | IT_SIGIL3 | IT_SIGIL3)
+#define ITEM_MASK (IT_SIGIL1 | IT_SIGIL2 | IT_SIGIL3 | IT_SIGIL3)
 
 //the two values are expected to be the same, they're just both provided for precision.
 static void CL_SetStatNumeric (int pnum, int stat, int ivalue, float fvalue)
@@ -5936,13 +5936,14 @@ static void CL_SetStatNumeric (int pnum, int stat, int ivalue, float fvalue)
 	if (cls.demoplayback == DPB_MVD || cls.demoplayback == DPB_EZTV)
 	{
 		extern int cls_lastto;
-		cl.players[cls_lastto].stats[stat]=ivalue;
-		cl.players[cls_lastto].statsf[stat]=fvalue;
 
 		// QTube: Also update teaminfo, but avoid overwriting flags and runes
 		if (stat == STAT_ITEMS) {
-			cl.players[cls_lastto].tinfo.items = (cl.players[cls_lastto].tinfo.items & ITEM_MASK) | (ivalue & ~ITEM_MASK);
+			ivalue = (cl.players[cls_lastto].stats[stat] & ITEM_MASK) | (ivalue & ~ITEM_MASK);
 		}
+
+		cl.players[cls_lastto].stats[stat]=ivalue;
+		cl.players[cls_lastto].statsf[stat]=fvalue;
 
 		if (cl_shownet.value == 3)
 			Con_Printf("\t%i: %i=%g\n", cls_lastto, stat, fvalue);
@@ -6608,6 +6609,8 @@ static void CL_ParsePrint(char *msg, int level)
 		strcat(printtext, msg);	//safe due to size on if.
 	while((msg = strchr(printtext, '\n')) || (msg = strchr(printtext, '\r')))
 	{
+		extern int cls_lastto;
+
 		n = msg[1];
 		msg[1] = 0;
 
@@ -6623,7 +6626,10 @@ static void CL_ParsePrint(char *msg, int level)
 				if (!TP_SuppressMessage(printtext))
 				{
 					body = CL_ParseChat(printtext, &plr, &msgflags);
-					if (body && !cls.demoseeking)
+
+					// QTube: Rune parsing horror, limit what chat is shown, as all the chats are available
+					// if (body && !cls.demoseeking)
+					if (body && !cls.demoseeking && cl.playerview[cl.defaultnetsplit].cam_spec_track == cls_lastto)
 						CL_PrintChat(plr, body, msgflags);
 				}
 			}
@@ -6642,7 +6648,8 @@ static void CL_ParsePrint(char *msg, int level)
 					if (!msg_filter_pickups.ival)
 						if (!msg_filter_frags.ival)
 #endif
-							CL_PrintStandardMessage(printtext, level);
+							if (!cls.demoseeking && cl.playerview[cl.defaultnetsplit].cam_spec_track == cls_lastto)
+								CL_PrintStandardMessage(printtext, level);
 			}
 //		}
 
@@ -7311,6 +7318,8 @@ void CLQW_ParseServerMessage (void)
 //
 	while (1)
 	{
+		extern int cls_lastto;
+
 		if (msg_badread)
 		{
 			CL_DumpPacket();
@@ -7381,6 +7390,11 @@ void CLQW_ParseServerMessage (void)
 
 		case svc_centerprint:
 			s = MSG_ReadString ();
+
+
+			// QTube: Hide centerprint of others, and map "sequences"
+			if (cls_lastto != cl.playerview[destsplit].cam_spec_track)
+				break;
 
 #ifdef PLUGINS
 			if (Plug_CenterPrintMessage(s, destsplit))
