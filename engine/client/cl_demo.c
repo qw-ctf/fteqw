@@ -896,8 +896,9 @@ readit:
 						tracknum = cl.playerview[seat].cam_spec_track;
 						if (cl.playerview[seat].cam_state == CAM_FREECAM)
 							tracknum = -1;
-						if (tracknum == -1 || (cls_lastto != tracknum))
-							continue;
+						// QTube: Rune parsing horror, let everything through
+						// if (tracknum == -1 || (cls_lastto != tracknum))
+						//	continue;
 						break;
 					}
 					if (seat == maxseat)
