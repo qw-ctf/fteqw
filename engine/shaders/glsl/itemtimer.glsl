@@ -25,8 +25,8 @@ void main ()
 	st *= 2.0;
 	float dist = sqrt(dot(st,st));
 
-	float ring = 1.0 + smoothstep(0.9, 1.0, dist)
-				 - smoothstep(0.8, 0.9, dist);
+	float ring = 1.0 + smoothstep(0.97, 1.0, dist)
+				 - smoothstep(0.7, 0.73, dist);
 
 	//fade out the rim
 	if ((atan(st.t, st.s)+3.14)/6.28 > vc.a)
