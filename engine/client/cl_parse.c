@@ -35,6 +35,7 @@ static char *CLNQ_ParseProQuakeMessage (char *s);
 #endif
 static void DLC_Poll(qdownload_t *dl);
 static void CL_ProcessUserInfo (int slot, player_info_t *player);
+static void CL_ParseStuffCmd(char *msg, int destsplit);
 static void Con_HexDump(qbyte *packet, size_t len, size_t badoffset);
 
 #ifdef NQPROT
@@ -4589,6 +4590,12 @@ static void CL_ParseModellist (qboolean lots)
 		}
 		return;
 	}
+
+
+#ifdef QUAKESTATS
+	if (cls.demoplayback == DPB_MVD && !*cl.model_name_vwep[0] && !(cls.fteprotocolextensions2 & PEXT2_REPLACEMENTDELTAS))
+		CL_ParseStuffCmd("//vwep vwplayer w_axe w_shot w_shot2 w_nail w_nail2 w_rock w_rock2 w_light\n", 0);
+#endif
 
 	SCR_SetLoadingFile("loading data");
 
