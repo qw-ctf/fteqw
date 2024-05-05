@@ -4827,6 +4827,22 @@ void CLQW_ParsePlayerinfo (void)
 
 	if (cls.demoplayback == DPB_MVD || cls.demoplayback == DPB_EZTV)
 	{
+#ifdef QUAKESTATS
+		const char *viewmodel = NULL;
+		static struct {
+			const char *vmdl;
+			const char *vwep;
+		} vwep_mapping[] = {
+				{"progs/v_axe.mdl",     "progs/w_axe.mdl"},
+				{"progs/v_shot.mdl",    "progs/w_shot.mdl"},
+				{"progs/v_shot2.mdl",   "progs/w_shot2.mdl"},
+				{"progs/v_nail.mdl",    "progs/w_nail.mdl"},
+				{"progs/v_nail2.mdl",   "progs/w_nail2.mdl"},
+				{"progs/v_rock.mdl",    "progs/w_rock.mdl"},
+				{"progs/v_rock2.mdl",   "progs/w_rock2.mdl"},
+				{"progs/v_light.mdl",   "progs/w_light.mdl"},
+		};
+#endif
 		player_state_t	dummy;
 		if (!cl.parsecount || info->prevcount > cl.parsecount || cl.parsecount - info->prevcount >= UPDATE_BACKUP - 1)
 		{
@@ -4853,11 +4869,39 @@ void CLQW_ParsePlayerinfo (void)
 
 		state->messagenum = cl.parsecount;
 		state->command.msec = 0;
+		state->command.impulse = 0;
+
+#ifdef QUAKESTATS
+		i = cl.players[num].stats[STAT_WEAPONMODELI];
+		if (i > 0 && i < MAX_PRECACHE_MODELS && *cl.model_name_vwep[0])
+			viewmodel = cl.model_name[i];
+		if (viewmodel)
+		{
+			for (i = 0; i < countof(vwep_mapping); i++)
+			{
+				if (!strcmp(viewmodel, vwep_mapping[i].vmdl))
+				{
+					viewmodel = vwep_mapping[i].vwep;
+					for (i = 1; i < countof(cl.model_name_vwep); i++)
+					{
+						if (!*cl.model_name_vwep[i])
+							break;
+						if (!strcmp(viewmodel, cl.model_name_vwep[i]))
+						{
+							state->command.impulse = i;
+							break;
+						}
+					}
+					break;
+				}
+			}
+		}
+#endif
 
 		state->frame = MSG_ReadByte ();
 
 		state->state_time = parsecounttime;
-		state->command.msec = 0;
+
 
 		for (i = 0; i < 3; i++)
 		{
