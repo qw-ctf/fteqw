@@ -85,7 +85,7 @@ jobs:
           # Currently fails to build
           sed -r -i '/define Q3(CLIENT|SERVER)/d' common/config_fteqw.h
 
-          make -j ${{ steps.cpu-cores.outputs.count }} FTE_TARGET=web web-${{ matrix.profile }}
+          make -j ${{ steps.cpu-cores.outputs.count }} FTE_TARGET=web web-${{ matrix.profile }} LINK_EZHUD=1
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
