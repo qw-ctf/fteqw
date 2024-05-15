@@ -1721,7 +1721,7 @@ ifeq ($(FTE_TARGET),droid)
 endif
 
 ifeq ($(FTE_TARGET),web)
-	COMMON_OBJS+=sys_web.o fs_web.o
+	COMMON_OBJS+=sys_web.o fs_web.o bindings.o
 	WEB_PREJS ?= --pre-js web/prejs.js
 #	WEB_MEMORY?=402653184	#384mb
 #	ASMJS_MEMORY?=16777216	#16mb
@@ -1740,6 +1740,7 @@ ifeq ($(FTE_TARGET),web)
 	EMCC_CFLAGS+= -s FILESYSTEM=0					#we have our own.
 	EMCC_CFLAGS+= -s ALLOW_MEMORY_GROWTH=1			#reduce crashes...
 	EMCC_CFLAGS+= -s MAX_WEBGL_VERSION=2			#make use of what we can.
+	EMCC_CFLAGS+= --bind
    	EMCC_LDFLAGS+=-s ERROR_ON_UNDEFINED_SYMBOLS=1	#fairly obvious. no runtime errors please.
 	RELEASE_CFLAGS=-DOMIT_QCC -DGL_STATIC $(EMCC_CFLAGS)
 	DEBUG_CFLAGS=-g4 -DOMIT_QCC -DGL_STATIC $(EMCC_CFLAGS)
