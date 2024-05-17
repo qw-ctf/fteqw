@@ -176,6 +176,8 @@ EMSCRIPTEN_BINDINGS(browser_api) {
 		.property("userid", &player_info_t::userid)
 		.property("spectator", &player_info_t::spectator)
 		.property("frags", &player_info_t::frags)
+		.property("topcolor", &player_info_t::rtopcolor)
+		.property("bottomcolor", &player_info_t::rbottomcolor)
 		.function("getName", +[](player_info_t& self) -> emscripten::val {
 			size_t len = strnlen(self.name, MAX_SCOREBOARDNAME);
 			return val(typed_memory_view(len, (unsigned char *) self.name));
