@@ -108,6 +108,11 @@ static const entity_mapping_t *find_entity(int entnum) {
 	throw std::invalid_argument("itemtimer entity type not supported");
 }
 
+static void collect_userinfo(void *ctx, const char *key, const char *value) {
+	emscripten::val *result = (emscripten::val *) ctx;
+	result->set(key, value);
+}
+
 EMSCRIPTEN_BINDINGS(browser_api) {
 	constant("STAT_HEALTH",         (int) STAT_HEALTH        );
 	constant("STAT_WEAPONMODELI",   (int) STAT_WEAPONMODELI  );
@@ -211,6 +216,26 @@ EMSCRIPTEN_BINDINGS(browser_api) {
 		})
 		.function("getStatsFloat", +[](player_info_t& self) -> emscripten::val {
 			return val(typed_memory_view(MAX_QW_STATS, self.statsf));
+		})
+		.function("getLocation", +[](player_info_t& self) -> std::string {
+			const char *location;
+			int index = &self - cl.players;
+			if (index + 1 < cl.maxlerpents && cl.lerpentssequence && cl.lerpents[index + 1].sequence == cl.lerpentssequence)
+				location = TP_LocationName((&cl.lerpents[index + 1])->origin);
+			else if (cl.lerpentssequence && cl.lerpplayers[index].sequence == cl.lerpentssequence)
+				location = TP_LocationName((&cl.lerpplayers[index])->origin);
+			else
+				throw std::out_of_range("Player index out of range");
+			if (location != NULL)
+				return std::string(location);
+			return std::string("unknown");
+		})
+		.function("getUserInfo", +[](player_info_t& self) -> emscripten::val {
+			emscripten::val result = emscripten::val::object();
+			if (self.userinfovalid) {
+				InfoBuf_Enumerate(&self.userinfo, &result, collect_userinfo);
+			}
+			return result;
 		});
 
 	class_<client_state_t::itemtimer_s>("ItemTimer")
@@ -248,8 +273,16 @@ EMSCRIPTEN_BINDINGS(browser_api) {
 		.property("matchstate", &client_state_t::matchstate) // enum, how
 		.property("gametime", &client_state_t::gametime)
 		.property("time", &client_state_t::time)
-		.function("getItemTimers", +[](client_state_t& self) -> client_state_t::itemtimer_s* {
+		.function("getItemTimer", +[](client_state_t& self) -> client_state_t::itemtimer_s* {
 			return self.itemtimers;
+		}, allow_raw_pointers())
+		.function("getItemTimers", +[](client_state_t& self) -> emscripten::val {
+			emscripten::val result = emscripten::val::array();
+			int n_timer = 0;
+			for (client_state_t::itemtimer_s *it = cl.itemtimers; it != NULL; it = it->next) {
+				result.set(n_timer++, it);
+			}
+			return result;
 		}, allow_raw_pointers())
 		.function("getLevelName", +[](client_state_t& self) -> emscripten::val {
 			size_t len = strnlen(self.levelname, 40);
@@ -267,18 +300,17 @@ EMSCRIPTEN_BINDINGS(browser_api) {
 				throw std::out_of_range("Player index out of range");
 			return &(self.players[index]);
 		}, allow_raw_pointers())
-		.function("getPlayerLocation", +[](client_state_t& self, size_t index) -> std::string {
-			const char *location;
-			if (index + 1 < cl.maxlerpents && cl.lerpentssequence && cl.lerpents[index + 1].sequence == cl.lerpentssequence)
-				location = TP_LocationName((&cl.lerpents[index + 1])->origin);
-			else if (cl.lerpentssequence && cl.lerpplayers[index].sequence == cl.lerpentssequence)
-				location = TP_LocationName((&cl.lerpplayers[index])->origin);
-			else
-				throw std::out_of_range("Player index out of range");
-			if (location != NULL)
-				return std::string(location);
-			return std::string("unknown");
-		});
+		.function("getPlayers", +[](client_state_t& self) -> emscripten::val {
+			emscripten::val result = emscripten::val::array();
+			int n_player = 0;
+			for (int i = 0; i < cl.allocated_client_slots; i++) {
+				player_info_t *player = &(cl.players[i]);
+				if (player->name[0] && !player->spectator) {
+					result.set(n_player++, player);
+				}
+			}
+			return result;
+		}, allow_raw_pointers());
 
 	function("getClientState", +[]() -> client_state_t* {
 		return &cl;
