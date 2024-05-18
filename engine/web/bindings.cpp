@@ -80,6 +80,7 @@ static entity_mapping_t entity_mapping[] = {
 		{ "progs/g_rock.mdl",   "tp_name_gl",   IT_GRENADE_LAUNCHER, -1 },
 		{ "progs/g_rock2.mdl",  "tp_name_rl",   IT_ROCKET_LAUNCHER,  -1 },
 		{ "progs/g_light.mdl",  "tp_name_lg",   IT_LIGHTNING,        -1 },
+		{ "maps/b_bh100.bsp",   "tp_name_mh",   IT_SUPERHEALTH,      -1 },
 };
 
 static const entity_mapping_t *find_entity(int entnum) {

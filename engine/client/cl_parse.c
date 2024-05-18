@@ -6703,32 +6703,32 @@ static void CL_ParseKtxItemTimer(void)
 	vec3_t org;
 	float start;
 
-	if (Cmd_Argc() < 3) {
-		Con_Printf("//ktx took: expected 3 args, got %d\n", Cmd_Argc());
+	if (Cmd_Argc() < 2) {
+		Con_Printf("ktx timer: expected 3 args, got %d\n", Cmd_Argc());
 		return;
 	}
 
 	duration = (float) strtod(Cmd_Argv(1), NULL);
 	if (duration <= 0) {
-		// mega needs special care as it decays in relation to player health
+		// mega comes via //ktx timer instead of //ktx took
 		return;
 	}
 
 	entnum = strtoul(Cmd_Argv(0), NULL, 0);
 	if (entnum < 0 || entnum >= cl_baselines_count) {
-		Con_Printf("//ktx took: entity index out of bounds: %d\n", entnum);
+		Con_Printf("ktx timer: entity index out of bounds: %d\n", entnum);
 		return;
 	}
 
 	ent = &cl_baselines[entnum];
 	if (ent->modelindex < 0 || ent->modelindex >= MAX_PRECACHE_MODELS) {
-		Con_Printf("//ktx took: model index out of bounds: %d (ent: %d)\n", ent->modelindex, entnum);
+		Con_Printf("ktx timer: model index out of bounds: %d (ent: %d)\n", ent->modelindex, entnum);
 		return;
 	}
 
 	mdl = cl.model_name[ent->modelindex];
 	if (!mdl) {
-		Con_Printf("//ktx took: could not find model name for index %d (ent: %d)\n", ent->modelindex, entnum);
+		Con_Printf("ktx timer: could not find model name for index %d (ent: %d)\n", ent->modelindex, entnum);
 		return;
 	}
 
@@ -6762,6 +6762,9 @@ static void CL_ParseKtxItemTimer(void)
 				rgb = 0x00ff00;
 				break;
 		}
+	}
+	else if (!strcmp("maps/b_bh100.bsp", mdl)) {
+		rgb = 0xff69b4;
 	}
 	else if (!strcmp("progs/g_shot.mdl", mdl) ||
 			 !strcmp("progs/g_nail.mdl", mdl) ||
@@ -7083,6 +7086,11 @@ static void CL_ParseStuffCmd(char *msg, int destsplit)	//this protects stuffcmds
 		else if (!strncmp(stufftext, "//ktx took ", 11))		//ktx took <entnum> <timeout> <playernum>
 		{
 			Cmd_TokenizeString(stufftext+11, false, false);
+			CL_ParseKtxItemTimer();
+		}
+		else if (!strncmp(stufftext, "//ktx timer ", 12))		//ktx timer <entnum> <timeout>
+		{
+			Cmd_TokenizeString(stufftext+12, false, false);
 			CL_ParseKtxItemTimer();
 		}
 		else if (!strncmp(stufftext, "//it ", 5))				//it <timeout> <org xyz> <radius> <rgb> <timername> <entnum>
