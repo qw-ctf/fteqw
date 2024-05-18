@@ -236,7 +236,14 @@ EMSCRIPTEN_BINDINGS(browser_api) {
 				InfoBuf_Enumerate(&self.userinfo, &result, collect_userinfo);
 			}
 			return result;
-		});
+		})
+		.function("setUserInfo", +[](player_info_t& self, emscripten::val jskey, emscripten::val jsvalue) -> emscripten::val {
+			const std::string key = jskey.as<std::string>();
+			const std::string value = jsvalue.as<std::string>();
+			bool result = InfoBuf_SetKey(&self.userinfo, key.c_str(), value.c_str());
+			return emscripten::val(result);
+
+		}, allow_raw_pointers());
 
 	class_<client_state_t::itemtimer_s>("ItemTimer")
 		.property("start", &client_state_t::itemtimer_s::start)
