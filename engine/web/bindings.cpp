@@ -279,6 +279,13 @@ EMSCRIPTEN_BINDINGS(browser_api) {
 			return self.next;
 		}, allow_raw_pointers());
 
+	class_<playerview_t>("PlayerView")
+	        .property("playernum", &playerview_t::playernum)
+			.property("cam_spec_track", &playerview_t::cam_spec_track)
+			.function("getTrackedPlayer", +[](playerview_t& self) -> player_info_t* {
+				return &(cl.players[self.cam_spec_track]);
+			}, allow_raw_pointers());
+
 	class_<client_state_t>("ClientState")
 		.property("deathmatch", &client_state_t::deathmatch)
 		.property("teamplay", &client_state_t::teamplay)
@@ -322,6 +329,21 @@ EMSCRIPTEN_BINDINGS(browser_api) {
 				if (player->name[0] && !player->spectator) {
 					result.set(n_player++, player);
 				}
+			}
+			return result;
+		}, allow_raw_pointers())
+		.function("getPlayerView", +[](client_state_t& self, size_t index) -> playerview_t* {
+			if (index >= cl.splitclients) {
+				throw std::out_of_range("Player view index out of range");
+			}
+			return &(cl.playerview[index]);
+		}, allow_raw_pointers())
+		.function("getPlayerViews", +[](client_state_t& self) -> emscripten::val {
+			emscripten::val result = emscripten::val::array();
+			int n_player = 0;
+			for (int i = 0; i < cl.splitclients; i++) {
+				playerview_t *pv = &(cl.playerview[i]);
+				result.set(n_player++, pv);
 			}
 			return result;
 		}, allow_raw_pointers());
