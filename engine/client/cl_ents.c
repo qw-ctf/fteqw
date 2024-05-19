@@ -4114,6 +4114,8 @@ void CL_LinkPacketEntities (void)
 		}
 		else
 		{
+			float percent;
+
 			timerlink = &(*timerlink)->next;
 			if (timer->entnum)
 			{
@@ -4124,7 +4126,13 @@ void CL_LinkPacketEntities (void)
 					}
 				}
 			}
-			R_AddItemTimer(timer->origin, cl.time*90 + timer->origin[0] + timer->origin[1] + timer->origin[2], timer->radius, (cl.time - timer->start) / timer->duration, timer->rgb);
+			// Reverse timer direction if start is in the future.
+			if (timer->start > cl.time) {
+				percent = (timer->start - (float) cl.time) / timer->duration;
+			} else {
+				percent = ((float) cl.time - timer->start) / timer->duration;
+			}
+			R_AddItemTimer(timer->origin, cl.time*90 + timer->origin[0] + timer->origin[1] + timer->origin[2], timer->radius, percent, timer->rgb);
 		}
 	}
 

@@ -67,20 +67,21 @@ typedef struct entity_mapping_st {
 } entity_mapping_t;
 
 static entity_mapping_t entity_mapping[] = {
-		{ "progs/ring.mdl",     "tp_name_ring", IT_INVISIBILITY,     -1 },
-		{ "progs/invulner.mdl", "tp_name_pent", IT_INVULNERABILITY,  -1 },
-		{ "progs/quaddama.mdl", "tp_name_quad", IT_QUAD,             -1 },
-		{ "progs/suit.mdl",     "tp_name_suit", IT_SUIT,             -1 },
-		{ "progs/armor.mdl",    "tp_name_ra",   IT_ARMOR3,            2 },
-		{ "progs/armor.mdl",    "tp_name_ya",   IT_ARMOR2,            1 },
-		{ "progs/armor.mdl",    "tp_name_ga",   IT_ARMOR1,            0 },
-		{ "progs/g_shot.mdl",   "tp_name_ssg",  IT_SUPER_SHOTGUN,    -1 },
-		{ "progs/g_nail.mdl",   "tp_name_ng",   IT_NAILGUN,          -1 },
-		{ "progs/g_nail2.mdl",  "tp_name_sng",  IT_SUPER_NAILGUN,    -1 },
-		{ "progs/g_rock.mdl",   "tp_name_gl",   IT_GRENADE_LAUNCHER, -1 },
-		{ "progs/g_rock2.mdl",  "tp_name_rl",   IT_ROCKET_LAUNCHER,  -1 },
-		{ "progs/g_light.mdl",  "tp_name_lg",   IT_LIGHTNING,        -1 },
-		{ "maps/b_bh100.bsp",   "tp_name_mh",   IT_SUPERHEALTH,      -1 },
+		{ "progs/backpack.mdl", "tp_name_backpack", 0,                   -1 },
+		{ "progs/ring.mdl",     "tp_name_ring",     IT_INVISIBILITY,     -1 },
+		{ "progs/invulner.mdl", "tp_name_pent",     IT_INVULNERABILITY,  -1 },
+		{ "progs/quaddama.mdl", "tp_name_quad",     IT_QUAD,             -1 },
+		{ "progs/suit.mdl",     "tp_name_suit",     IT_SUIT,             -1 },
+		{ "progs/armor.mdl",    "tp_name_ra",       IT_ARMOR3,            2 },
+		{ "progs/armor.mdl",    "tp_name_ya",       IT_ARMOR2,            1 },
+		{ "progs/armor.mdl",    "tp_name_ga",       IT_ARMOR1,            0 },
+		{ "progs/g_shot.mdl",   "tp_name_ssg",      IT_SUPER_SHOTGUN,    -1 },
+		{ "progs/g_nail.mdl",   "tp_name_ng",       IT_NAILGUN,          -1 },
+		{ "progs/g_nail2.mdl",  "tp_name_sng",      IT_SUPER_NAILGUN,    -1 },
+		{ "progs/g_rock.mdl",   "tp_name_gl",       IT_GRENADE_LAUNCHER, -1 },
+		{ "progs/g_rock2.mdl",  "tp_name_rl",       IT_ROCKET_LAUNCHER,  -1 },
+		{ "progs/g_light.mdl",  "tp_name_lg",       IT_LIGHTNING,        -1 },
+		{ "maps/b_bh100.bsp",   "tp_name_mh",       IT_SUPERHEALTH,      -1 },
 };
 
 static const entity_mapping_t *find_entity(int entnum) {
@@ -88,10 +89,16 @@ static const entity_mapping_t *find_entity(int entnum) {
 	const char *mdl;
 	int i;
 
-	if (entnum < 0 || entnum >= cl_baselines_count)
-		throw std::out_of_range("itemtimer entity index out of range");
+	if (entnum >= cl.maxlerpents || !cl.lerpentssequence || cl.lerpents[entnum].sequence != cl.lerpentssequence) {
+		if (entnum >= 0 || entnum < cl_baselines_count) {
+			ent = &cl_baselines[entnum];
+		} else {
+			throw std::out_of_range("itemtimer entity index out of range");
+		}
+	} else {
+		ent = (&cl.lerpents[entnum])->entstate;
+	}
 
-	ent = &cl_baselines[entnum];
 	if (ent->modelindex < 0 || ent->modelindex >= MAX_PRECACHE_MODELS)
 		throw std::out_of_range("itemtimer entity model index out of range");
 

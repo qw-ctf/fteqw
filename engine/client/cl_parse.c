@@ -6693,6 +6693,71 @@ static void CL_ParseWeaponStats(void)
 #endif
 }
 
+
+static void CL_ParseKtxBackpackRemove(void) {
+	struct itemtimer_s *current, *previous;
+	unsigned int entnum;
+
+	if (Cmd_Argc() < 1) {
+		Con_Printf("ktx expire/bp: expected at least 1 arg, got %d\n", Cmd_Argc());
+		return;
+	}
+
+	entnum = strtoul(Cmd_Argv(0), NULL, 0);
+
+	current = cl.itemtimers;
+	previous = NULL;
+
+	while (current != NULL) {
+		if (current->entnum == entnum) {
+			if (previous == NULL) {
+				cl.itemtimers = current->next;
+			} else {
+				previous->next = current->next;
+			}
+			Z_Free(current);
+			break;
+		}
+		previous = current;
+		current = current->next;
+	}
+}
+
+static void CL_ParseKtxBackpackDrop(void)
+{
+	struct itemtimer_s *timer;
+	unsigned int entnum, rgb, items;
+
+	if (Cmd_Argc() < 2) {
+		Con_Printf("ktx drop: expected at least 2 args, got %d\n", Cmd_Argc());
+		return;
+	}
+
+	entnum = strtoul(Cmd_Argv(0), NULL, 0);
+	items = strtoul(Cmd_Argv(1), NULL, 0);
+
+	timer = Z_Malloc(sizeof(*timer));
+	timer->next = cl.itemtimers;
+	cl.itemtimers = timer;
+
+	if (items & IT_LIGHTNING) {
+		rgb = 0xffffff;
+	} else if (items & IT_ROCKET_LAUNCHER) {
+		rgb = 0xff0000;
+	} else {
+		rgb = 0xff00ff; // Shouldn't happen
+	}
+
+	timer->entnum = entnum;
+	timer->radius = 48;
+	timer->duration = 120;
+	timer->start = (float)(cl.time + timer->duration);
+	timer->end = (float)(cl.time + timer->duration);
+	timer->rgb[0] = ((rgb>>16)&0xff)/255.0f;
+	timer->rgb[1] = ((rgb>> 8)&0xff)/255.0f;
+	timer->rgb[2] = ((rgb)    &0xff)/255.0f;
+}
+
 static void CL_ParseKtxItemTimer(void)
 {
 	struct itemtimer_s *timer;
@@ -7092,6 +7157,21 @@ static void CL_ParseStuffCmd(char *msg, int destsplit)	//this protects stuffcmds
 		{
 			Cmd_TokenizeString(stufftext+12, false, false);
 			CL_ParseKtxItemTimer();
+		}
+		else if (!strncmp(stufftext, "//ktx drop", 10))         //ktx drop <entnum> <items> <player entnum>
+		{
+			Cmd_TokenizeString(stufftext+10, false, false);
+			CL_ParseKtxBackpackDrop();
+		}
+		else if (!strncmp(stufftext, "//ktx bp", 8))         //ktx bp <entnum> <player entnum>
+		{
+			Cmd_TokenizeString(stufftext+8, false, false);
+			CL_ParseKtxBackpackRemove();
+		}
+		else if (!strncmp(stufftext, "//ktx expire", 12))         //ktx expire <entnum>
+		{
+			Cmd_TokenizeString(stufftext+8, false, false);
+			CL_ParseKtxBackpackRemove();
 		}
 		else if (!strncmp(stufftext, "//it ", 5))				//it <timeout> <org xyz> <radius> <rgb> <timername> <entnum>
 		{
