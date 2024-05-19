@@ -387,4 +387,9 @@ EMSCRIPTEN_BINDINGS(browser_api) {
 		extern fragstats_t fragstats;
 		return &fragstats;
 	}, allow_raw_pointers());
+
+	function("getDemoTime",  +[]() -> float {
+		extern float demtime;
+		return demtime;
+	});
 }
