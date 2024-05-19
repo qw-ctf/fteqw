@@ -130,6 +130,7 @@ byte *StringToRGB(const char *str);
 void Draw_EZString(float x, float y, char *str, float scale, qboolean red);
 #define Draw_Alt_String(x,y,s)			Draw_EZString(x,y,s,8,true)
 #define Draw_ColoredString(x,y,str,alt)	Draw_EZString(x,y,str,8,alt)
+#define Draw_ColoredSString(x,y,str,sc,alt)	Draw_EZString(x,y,str,8*sc,alt)
 #define Draw_SString(x,y,str,sc)		Draw_EZString(x,y,str,8*sc,false)
 #define Draw_SAlt_String(x,y,str,sc)	Draw_EZString(x,y,str,8*sc,true)
 

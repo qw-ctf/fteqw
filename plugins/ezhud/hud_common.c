@@ -5824,13 +5824,13 @@ static int SCR_HudDrawTeamInfoPlayer(teamplayerinfo_t *ti_cl, int x, int y, int 
 							char *weap_str = cvarfuncs->GetNVFDG("tp_name_rlg", "rlg", 0, NULL, NULL)->string;
 							char weap_white_stripped[32];
 							Util_SkipChars(weap_str, "{}", weap_white_stripped, 32);
-							Draw_ColoredString (x, y, weap_white_stripped, false);
+							Draw_ColoredSString(x, y, weap_white_stripped, scale, false);
 						}
 						else {
 							char *weap_str = TP_ItemName(BestWeaponFromStatItems( ti_cl->items ));
 							char weap_white_stripped[32];
 							Util_SkipChars(weap_str, "{}", weap_white_stripped, 32);
-							Draw_ColoredString (x, y, weap_white_stripped, false);
+							Draw_ColoredSString(x, y, weap_white_stripped, scale, false);
 						}
 					}
 					x += 3 * FONTWIDTH * scale;
@@ -5945,13 +5945,13 @@ static int SCR_HudDrawTeamInfoPlayer(teamplayerinfo_t *ti_cl, int x, int y, int 
 				case 1: // quad/pent/ring image
 					if(!width_only) {
 						if (ti_cl->items & IT_QUAD)
-							Draw_SPic (x, y, sb_items[5], 1.0/2);
+							Draw_SPic (x, y, sb_items[5], 1.0f / 2 * scale);
 						x += FONTWIDTH;
 						if (ti_cl->items & IT_INVULNERABILITY)
-							Draw_SPic (x, y, sb_items[3], 1.0/2);
+							Draw_SPic (x, y, sb_items[3], 1.0f / 2 * scale);
 						x += FONTWIDTH;
 						if (ti_cl->items & IT_INVISIBILITY)
-							Draw_SPic (x, y, sb_items[2], 1.0/2);
+							Draw_SPic (x, y, sb_items[2], 1.0f / 2 * scale);
 						x += FONTWIDTH;
 					}
 					else { x += 3* FONTWIDTH; }
@@ -5960,13 +5960,13 @@ static int SCR_HudDrawTeamInfoPlayer(teamplayerinfo_t *ti_cl, int x, int y, int 
 				case 2: // player powerup face
 					if(!width_only) {
 						if ( sb_face_quad && (ti_cl->items & IT_QUAD))
-							Draw_SPic (x, y, sb_face_quad, 1.0/3);
+							Draw_SPic (x, y, sb_face_quad, 1.0f / 3 * scale);
 						x += FONTWIDTH;
 						if ( sb_face_invuln && (ti_cl->items & IT_INVULNERABILITY))
-							Draw_SPic (x, y, sb_face_invuln, 1.0/3);
+							Draw_SPic (x, y, sb_face_invuln, 1.0f / 3 * scale);
 						x += FONTWIDTH;
 						if ( sb_face_invis && (ti_cl->items & IT_INVISIBILITY))
-							Draw_SPic (x, y, sb_face_invis, 1.0/3);
+							Draw_SPic (x, y, sb_face_invis, 1.0f / 3 * scale);
 						x += FONTWIDTH;
 					}
 					else { x += 3* FONTWIDTH; }
@@ -5975,13 +5975,13 @@ static int SCR_HudDrawTeamInfoPlayer(teamplayerinfo_t *ti_cl, int x, int y, int 
 				case 3: // colored font (QPR)
 					if(!width_only) {
 						if (ti_cl->items & IT_QUAD)
-							Draw_ColoredString (x, y, "&c03fQ", false);
+							Draw_ColoredSString(x, y, "&c03fQ", scale, false);
 						x += FONTWIDTH;
 						if (ti_cl->items & IT_INVULNERABILITY)
-							Draw_ColoredString (x, y, "&cf00P", false);
+							Draw_ColoredSString (x, y, "&cf00P", scale, false);
 						x += FONTWIDTH;
 						if (ti_cl->items & IT_INVISIBILITY)
-							Draw_ColoredString (x, y, "&cff0R", false);
+							Draw_ColoredSString (x, y, "&cff0R", scale, false);
 						x += FONTWIDTH;
 					}
 					else { x += 3* FONTWIDTH; }
@@ -6002,9 +6002,9 @@ static int SCR_HudDrawTeamInfoPlayer(teamplayerinfo_t *ti_cl, int x, int y, int 
                     case 1:
                         if (!width_only) {
                             if (ti_cl->items & IT_KEY1) {
-                                Draw_SPic(x, y, sb_items[0], 1.0f/3);
+                                Draw_SPic(x, y, sb_items[0], 1.0f / 2 * scale);
                             } else if (ti_cl->items & IT_KEY2) {
-                                Draw_SPic(x, y, sb_items[1], 1.0f/3);
+                                Draw_SPic(x, y, sb_items[1], 1.0f / 2 * scale);
                             }
                         }
                         break;
