@@ -6774,10 +6774,6 @@ static void CL_ParseKtxItemTimer(void)
 	}
 
 	duration = (float) strtod(Cmd_Argv(1), NULL);
-	if (duration <= 0) {
-		// mega comes via //ktx timer instead of //ktx took
-		return;
-	}
 
 	entnum = strtoul(Cmd_Argv(0), NULL, 0);
 	if (entnum < 0 || entnum >= cl_baselines_count) {
@@ -6845,7 +6841,7 @@ static void CL_ParseKtxItemTimer(void)
 
 	for (timer = cl.itemtimers; timer; timer = timer->next)
 	{
-		if (VectorCompare(timer->origin, org))
+		if (timer->entnum == entnum || VectorCompare(timer->origin, org))
 			break;
 	}
 
@@ -6861,7 +6857,7 @@ static void CL_ParseKtxItemTimer(void)
 	VectorCopy(org, timer->origin);
 	timer->entnum = entnum;
 	timer->radius = 48;
-	timer->duration = duration;
+	timer->duration = duration <= 0 ? FLT_MAX : duration;
 	timer->start = start;
 	timer->end = start + timer->duration;
 	timer->rgb[0] = ((rgb>>16)&0xff)/255.0;
