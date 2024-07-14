@@ -150,12 +150,25 @@ mergeInto(LibraryManager.library,
 					console.log(event.data);
 					FTEC.loadurl(event.data.url, event.data.cmd, undefined);
 					break;
-				case 'resize':
-					if (FTEC.evcb.resize != 0)
-					{
-						{{{makeDynCall('vii','FTEC.evcb.resize')}}}(Module['canvas'].width, Module['canvas'].height);
+				case 'fullscreenchange':
+				case 'resize': {
+					let scale = window.devicePixelRatio;	//urgh. haxx.
+					if (scale <= 0)
+						scale = 1;
+					let rect = Module['canvas'].getBoundingClientRect();
+					Browser.setCanvasSize(rect.width * scale, rect.height * scale, false);
+					if (FTEC.evcb.resize != 0) {
+						{
+							{
+								{
+									makeDynCall('vii', 'FTEC.evcb.resize')
+								}
+							}
+						}
+						(Module['canvas'].width, Module['canvas'].height, scale);
 					}
 					break;
+				}
 				case 'mousemove':
 					if (FTEC.evcb.mouse != 0)
 					{
@@ -467,6 +480,9 @@ mergeInto(LibraryManager.library,
 
 		window.onresize = function()
 		{
+			let scale = window.devicePixelRatio;	//urgh. haxx.
+			if (scale <= 0)
+				scale = 1;
 			//emscripten's browser library will revert sizes wrongly or something when we're fullscreen, so make sure that doesn't happen.
 //			if (Browser.isFullScreen)
 //			{
@@ -475,11 +491,11 @@ mergeInto(LibraryManager.library,
 //			}
 //			else
 			{
-				var rect = Module['canvas'].getBoundingClientRect();
-				Browser.setCanvasSize(rect.width, rect.height, false);
+				let rect = Module['canvas'].getBoundingClientRect();
+				Browser.setCanvasSize(rect.width*scale, rect.height*scale, false);
 			}
 			if (FTEC.evcb.resize != 0)
-				{{{makeDynCall('vii','FTEC.evcb.resize')}}}(Module['canvas'].width, Module['canvas'].height);
+				{{{makeDynCall('viif','FTEC.evcb.resize')}}}(Module['canvas'].width, Module['canvas'].height, scale);
 		};
 		window.onresize();
 
