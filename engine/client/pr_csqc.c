@@ -9606,7 +9606,7 @@ qboolean CSQC_StuffCmd(int lplayernum, char *cmd, char *cmdend)
 	cmdend[1] = tmp[1];
 
 	PR_ExecuteProgram (csqcprogs, csqcg.CSQC_Parse_StuffCmd);
-	return true;
+	return false; // QTube: Swiwch to CSQC_Parse_StuffText when that exists
 }
 qboolean CSQC_CenterPrint(int seat, const char *cmd)
 {
