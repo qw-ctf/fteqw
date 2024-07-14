@@ -6124,7 +6124,9 @@ static void QCBUILTIN PF_getentity(pubprogfuncs_t *prinst, struct globalvars_s *
 	int entnum = G_FLOAT(OFS_PARM0);
 	int fldnum = G_FLOAT(OFS_PARM1);
 	lerpents_t *le;
-	entity_state_t *es;
+	entity_state_t *es = NULL;
+	vec3_t org, ang;
+	int i;
 
 	if (csqc_nogameaccess)
 	{
@@ -6270,15 +6272,36 @@ static void QCBUILTIN PF_getentity(pubprogfuncs_t *prinst, struct globalvars_s *
 		return;
 	}
 
-	if (entnum >= cl.maxlerpents || !cl.lerpentssequence || cl.lerpents[entnum].sequence != cl.lerpentssequence)
+	if (cls.demoseeking)
+	{
+		for (i = 0; i < cl.inframes[cl.validsequence & UPDATE_MASK].packet_entities.num_entities; i++)
+		{
+			entity_state_t *candidate = &cl.inframes[cl.validsequence & UPDATE_MASK].packet_entities.entities[i];
+			if (candidate->number == entnum)
+			{
+				es = candidate;
+				break;
+			}
+		}
+		if (es)
+		{
+			VectorCopy(es->origin, org);
+			VectorCopy(es->angles, ang);
+		}
+	}
+
+	if (!es && (entnum >= cl.maxlerpents || !cl.lerpentssequence || cl.lerpents[entnum].sequence != cl.lerpentssequence))
 	{
 		if (fldnum != GE_ACTIVE)
 			Con_DPrintf("PF_getentity: entity %i is not valid\n", entnum);
 		VectorCopy(vec3_origin, G_VECTOR(OFS_RETURN));
 		return;
+	} else {
+		le = &cl.lerpents[entnum];
+		es = le->entstate;
+		VectorCopy(le->origin, org);
+		VectorCopy(le->angles, ang);
 	}
-	le = &cl.lerpents[entnum];
-	es = le->entstate;
 	switch(fldnum)
 	{
 	case GE_ACTIVE:
@@ -6286,7 +6309,7 @@ static void QCBUILTIN PF_getentity(pubprogfuncs_t *prinst, struct globalvars_s *
 		break;
 	case GE_ORIGIN:
 		/*lerped position*/
-		VectorCopy(le->origin, G_VECTOR(OFS_RETURN));
+		VectorCopy(org, G_VECTOR(OFS_RETURN));
 		break;
 	case GE_SCALE:
 		G_FLOAT(OFS_RETURN) = es->scale / 16.0f;
@@ -6319,28 +6342,28 @@ static void QCBUILTIN PF_getentity(pubprogfuncs_t *prinst, struct globalvars_s *
 		{
 			vec3_t maxs;
 			COM_DecodeSize(es->solidsize, G_VECTOR(OFS_RETURN), maxs);
-			VectorAdd(G_VECTOR(OFS_RETURN), le->origin, G_VECTOR(OFS_RETURN));
+			VectorAdd(G_VECTOR(OFS_RETURN), org, G_VECTOR(OFS_RETURN));
 		}
 		break;
 	case GE_ABSMAX:
 		{
 			vec3_t mins;
 			COM_DecodeSize(es->solidsize, mins, G_VECTOR(OFS_RETURN));
-			VectorAdd(G_VECTOR(OFS_RETURN), le->origin, G_VECTOR(OFS_RETURN));
+			VectorAdd(G_VECTOR(OFS_RETURN), org, G_VECTOR(OFS_RETURN));
 		}
 		break;
 	case GE_ORIGINANDVECTORS:
-		VectorCopy(le->origin, G_VECTOR(OFS_RETURN));
-		AngleVectorsIndex(le->angles, es->modelindex, csqcg.v_forward, csqcg.v_right, csqcg.v_up);
+		VectorCopy(org, G_VECTOR(OFS_RETURN));
+		AngleVectorsIndex(ang, es->modelindex, csqcg.v_forward, csqcg.v_right, csqcg.v_up);
 		break;
 	case GE_FORWARD:
-		AngleVectorsIndex(le->angles, es->modelindex, G_VECTOR(OFS_RETURN), NULL, NULL);
+		AngleVectorsIndex(ang, es->modelindex, G_VECTOR(OFS_RETURN), NULL, NULL);
 		break;
 	case GE_RIGHT:
-		AngleVectorsIndex(le->angles, es->modelindex, NULL, G_VECTOR(OFS_RETURN), NULL);
+		AngleVectorsIndex(ang, es->modelindex, NULL, G_VECTOR(OFS_RETURN), NULL);
 		break;
 	case GE_UP:
-		AngleVectorsIndex(le->angles, es->modelindex, NULL, NULL, G_VECTOR(OFS_RETURN));
+		AngleVectorsIndex(ang, es->modelindex, NULL, NULL, G_VECTOR(OFS_RETURN));
 		break;
 	case GE_PANTSCOLOR:
 		if (es->colormap <= cl.allocated_client_slots && !(es->dpflags & RENDER_COLORMAPPED))
@@ -6371,7 +6394,7 @@ static void QCBUILTIN PF_getentity(pubprogfuncs_t *prinst, struct globalvars_s *
 		G_FLOAT(OFS_RETURN) = es->frame;
 		break;
 	case GE_ANGLES:
-		VectorCopy(le->angles, G_VECTOR(OFS_RETURN));
+		VectorCopy(ang, G_VECTOR(OFS_RETURN));
 		break;
 	case GE_FATNESS:
 		G_FLOAT(OFS_RETURN) = es->fatness;
@@ -9595,6 +9618,11 @@ qboolean CSQC_StuffCmd(int lplayernum, char *cmd, char *cmdend)
 		return false;
 
 	CSQC_ChangeLocalPlayer(lplayernum);
+
+	if (cls.demoseeking && csqcg.time) {    //estimated server time
+		CL_CalcClientTime();
+		*csqcg.time = cl.servertime;
+	}
 
 	pr_globals = PR_globals(csqcprogs, PR_CURRENT);
 	tmp[0] = cmdend[0];
