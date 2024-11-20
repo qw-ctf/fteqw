@@ -4535,7 +4535,7 @@ static void QCBUILTIN PF_precache_sound (pubprogfuncs_t *prinst, struct globalva
 	else
 		G_INT(OFS_RETURN) = G_INT(OFS_PARM0);	//returns the filename as a string.
 }
-static void QCBUILTIN PF_getsoundindex (pubprogfuncs_t *prinst, struct globalvars_s *pr_globals)
+void QCBUILTIN PF_getsoundindex (pubprogfuncs_t *prinst, struct globalvars_s *pr_globals)
 {
 	const char	*s = PR_GetStringOfs(prinst, OFS_PARM0);
 	qboolean queryonly = (svprogfuncs->callargc >= 2)?G_FLOAT(OFS_PARM1):false;
@@ -4634,7 +4634,7 @@ static void QCBUILTIN PF_h2precache_puzzle_model (pubprogfuncs_t *prinst, struct
 }
 #endif
 
-static void QCBUILTIN PF_getmodelindex (pubprogfuncs_t *prinst, struct globalvars_s *pr_globals)
+void QCBUILTIN PF_getmodelindex (pubprogfuncs_t *prinst, struct globalvars_s *pr_globals)
 {
 	const char	*s = PR_GetStringOfs(prinst, OFS_PARM0);
 	qboolean queryonly = (svprogfuncs->callargc >= 2)?G_FLOAT(OFS_PARM1):false;

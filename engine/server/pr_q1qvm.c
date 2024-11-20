@@ -2031,6 +2031,8 @@ static qintptr_t QVM_uri_query (void *offset, quintptr_t mask, const qintptr_t *
 void QCBUILTIN PF_sv_trailparticles(pubprogfuncs_t *prinst, struct globalvars_s *pr_globals);
 void QCBUILTIN PF_sv_pointparticles(pubprogfuncs_t *prinst, struct globalvars_s *pr_globals);
 void QCBUILTIN PF_sv_particleeffectnum(pubprogfuncs_t *prinst, struct globalvars_s *pr_globals);
+void QCBUILTIN PF_getmodelindex (pubprogfuncs_t *prinst, struct globalvars_s *pr_globals);
+void QCBUILTIN PF_getsoundindex (pubprogfuncs_t *prinst, struct globalvars_s *pr_globals);
 static qintptr_t QVM_particleeffectnum (void *offset, quintptr_t mask, const qintptr_t *arg)
 {
 	int i = WrapQCBuiltin(PF_sv_particleeffectnum, offset, mask, arg, "s");
@@ -2110,6 +2112,16 @@ static qintptr_t QVM_VisibleTo_FTE (void *offset, quintptr_t mask, const qintptr
 		}
 	}
 	return 0;
+}
+
+static qintptr_t QVM_getmodelindex (void *offset, quintptr_t mask, const qintptr_t *arg)
+{
+	return WrapQCBuiltin(PF_getmodelindex, offset, mask, arg, "i");
+}
+
+static qintptr_t QVM_getsoundindex (void *offset, quintptr_t mask, const qintptr_t *arg)
+{
+	return WrapQCBuiltin(PF_getsoundindex, offset, mask, arg, "i");
 }
 
 static qintptr_t QVM_Map_Extension (void *offset, quintptr_t mask, const qintptr_t *arg);
@@ -2234,6 +2246,8 @@ struct
 	{"pointerstat",			QVM_pointerstat},	//csqc extension
 	{"setsendneeded",		QVM_SetSendNeeded},		//csqc extension
 	{"VisibleTo",			QVM_VisibleTo_FTE},		//alternative to mvdsv's visclients hack. redundant now. FIXME: Remove.
+	{"getmodelindex",		QVM_getmodelindex},
+	{"getsoundindex",		QVM_getsoundindex},
 
 	//sql?
 	//model querying?
