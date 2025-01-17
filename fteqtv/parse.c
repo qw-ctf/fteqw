@@ -640,7 +640,7 @@ static void ParseCenterprint(sv_t *tv, netmsg_t *m, int to, unsigned int mask)
 		break;
 	}
 }
-static int ParseList(sv_t *tv, netmsg_t *m, filename_t *list, int to, unsigned int mask, qboolean big)
+static int ParseList(sv_t *tv, netmsg_t *m, filename_t *list, size_t len, int to, unsigned int mask, qboolean big)
 {
 	int first;
 
@@ -648,7 +648,7 @@ static int ParseList(sv_t *tv, netmsg_t *m, filename_t *list, int to, unsigned i
 		first = ReadShort(m)+1;
 	else
 		first = ReadByte(m)+1;
-	for (; first < MAX_LIST; first++)
+	for (; first < len; first++)
 	{
 		ReadString(m, list[first].name, sizeof(list[first].name));
 //		printf("read %i: %s\n", first, list[first].name);
@@ -926,9 +926,9 @@ static void ParseEntityDelta(sv_t *tv, netmsg_t *m, const entity_state_t *old, e
 		/*new->abslight =*/ ReadByte(m);
 	if (flags & UX_COLOURMOD)
 	{
-		/*new->colormod[0] =*/ ReadByte(m);
-		/*new->colormod[1] =*/ ReadByte(m);
-		/*new->colormod[2] =*/ ReadByte(m);
+		new->colormod[0] = ReadByte(m);
+		new->colormod[1] = ReadByte(m);
+		new->colormod[2] = ReadByte(m);
 	}
 	if (flags & UX_DPFLAGS)
 	{	// these are bits for the 'flags' field of the entity_state_t
@@ -1945,7 +1945,7 @@ void ParseMessage(sv_t *tv, void *buffer, int length, int to, int mask)
 
 		case svcfte_modellistshort:
 		case svc_modellist:
-			i = ParseList(tv, &buf, tv->map.modellist, to, mask, svc==svcfte_modellistshort);
+			i = ParseList(tv, &buf, tv->map.modellist, MAX_MODELS, to, mask, svc==svcfte_modellistshort);
 			if (!i)
 			{
 				int j;
@@ -2021,7 +2021,7 @@ void ParseMessage(sv_t *tv, void *buffer, int length, int to, int mask)
 			break;
 		case svcfte_soundlistshort:
 		case svc_soundlist:
-			i = ParseList(tv, &buf, tv->map.soundlist, to, mask, svc==svcfte_soundlistshort);
+			i = ParseList(tv, &buf, tv->map.soundlist, MAX_SOUNDS, to, mask, svc==svcfte_soundlistshort);
 			if (!i)
 				strcpy(tv->status, "Receiving modellist\n");
 			ConnectionData(tv, (void*)((char*)buf.data+buf.startpos), buf.readpos - buf.startpos, to, mask, QW);

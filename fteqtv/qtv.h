@@ -391,7 +391,7 @@ typedef struct {
 //	unsigned char	fatness;
 //	unsigned char	abslight;
 //	unsigned char	h2flags;
-//	unsigned char	colormod[3];
+	unsigned char	colormod[3];
 //	unsigned short	light[4];
 //	unsigned char	lightstyle;
 //	unsigned char	lightpflags;

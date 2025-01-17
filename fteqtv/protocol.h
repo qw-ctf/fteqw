@@ -5,18 +5,18 @@
 #define MAX_USERINFO 1024	//standard quakeworld has 192 here.
 #define MAX_CLIENTS 32
 #define MAX_LIST 256
-#define MAX_MODELS MAX_LIST
+#define MAX_MODELS 4096 // really UINT16_MAX with MODELDBL, but only 2048+2048 referrable via dynamic/static ents.
 #define MAX_SOUNDS MAX_LIST
-#define MAX_ENTITIES 512
+#define MAX_ENTITIES 2048
 #define MAX_STATICSOUNDS 256
-#define MAX_STATICENTITIES 128
+#define MAX_STATICENTITIES 2048
 #define MAX_LIGHTSTYLES 64
 
 #define MAX_PROXY_INBUFFER 4096		//max bytes from a downstream proxy.
 #define MAX_PROXY_BUFFER (1<<17)	//must be power-of-two (buffer sizes for downstream, both sv/cl)
 #define PREFERRED_PROXY_BUFFER	4096 //the ammount of data we try to leave in our input buffer (must be large enough to contain any single mvd frame)
 
-#define ENTS_PER_FRAME 64 //max number of entities per frame (OUCH!).
+#define ENTS_PER_FRAME 300 //max number of entities per frame (OUCH!).
 #define ENTITY_FRAMES 64 //number of frames to remember for deltaing
 
 

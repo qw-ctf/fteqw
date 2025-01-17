@@ -521,8 +521,12 @@ void WriteEntityState(netmsg_t *msg, entity_state_t *es, unsigned int pext)
 		WriteAngle(msg, es->angles[i], pext);
 	}
 }
+
+void SV_WriteDelta(int entnum, const entity_state_t *from, const entity_state_t *to, netmsg_t *msg, qboolean force, unsigned int pext);
+
 int SendCurrentBaselines(sv_t *tv, int cursize, netmsg_t *msg, int maxbuffersize, int i)
 {
+	entity_state_t nullstate = {0};
 
 	if (i < 0 || i >= MAX_ENTITIES)
 		return i;
@@ -536,9 +540,16 @@ int SendCurrentBaselines(sv_t *tv, int cursize, netmsg_t *msg, int maxbuffersize
 
 		if (tv->map.entity[i].baseline.modelindex)
 		{
-			WriteByte(msg, svc_spawnbaseline);
-			WriteShort(msg, i);
-			WriteEntityState(msg, &tv->map.entity[i].baseline, tv->pext1);
+			if (tv->pext1&PEXT_SPAWNSTATIC2)
+			{
+				WriteByte(msg, svcfte_spawnbaseline2);
+				SV_WriteDelta(i, &nullstate, &tv->map.entity[i].baseline, msg, true, tv->pext1);
+			}
+			else {
+				WriteByte(msg, svc_spawnbaseline);
+				WriteShort(msg, i);
+				WriteEntityState(msg, &tv->map.entity[i].baseline, tv->pext1);
+			}
 		}
 	}
 
@@ -588,6 +599,7 @@ int SendStaticSounds(sv_t *tv, int cursize, netmsg_t *msg, int maxbuffersize, in
 }
 int SendStaticEntities(sv_t *tv, int cursize, netmsg_t *msg, int maxbuffersize, int i)
 {
+	entity_state_t nullstate = {0};
 	if (i < 0 || i >= MAX_STATICENTITIES)
 		return i;
 
@@ -600,8 +612,16 @@ int SendStaticEntities(sv_t *tv, int cursize, netmsg_t *msg, int maxbuffersize, 
 		if (!tv->map.spawnstatic[i].modelindex)
 			continue;
 
-		WriteByte(msg, svc_spawnstatic);
-		WriteEntityState(msg, &tv->map.spawnstatic[i], tv->pext1);
+		if (tv->pext1&PEXT_SPAWNSTATIC2)
+		{
+			WriteByte(msg, svcfte_spawnstatic2);
+			SV_WriteDelta(i, &nullstate, &tv->map.spawnstatic[i], msg, true, tv->pext1);
+		}
+		else
+		{
+			WriteByte(msg, svc_spawnstatic);
+			WriteEntityState(msg, &tv->map.spawnstatic[i], tv->pext1);
+		}
 	}
 
 	return i;
@@ -1614,12 +1634,14 @@ void SV_WriteDelta(int entnum, const entity_state_t *from, const entity_state_t 
 		WriteByte (msg, to->hexen2flags);
 	if (bits & UX_ABSLIGHT)
 		WriteByte (msg, to->abslight);
+*/
 	if (bits & UX_COLOURMOD)
 	{
 		WriteByte (msg, to->colormod[0]);
 		WriteByte (msg, to->colormod[1]);
 		WriteByte (msg, to->colormod[2]);
 	}
+/*
 	if (bits & UX_DPFLAGS)
 	{	// these are bits for the 'flags' field of the entity_state_t
 		WriteByte (msg, to->dpflags);
