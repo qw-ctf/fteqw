@@ -562,7 +562,7 @@ void Net_SendConnectionMVD(sv_t *qtv, oproxy_t *prox)
 	msg.cursize = 0;
 
 	WriteByte(&msg, svc_stufftext);
-	WriteString(&msg, "skins\n");
+	WriteString(&msg, "skins; fog 0\n");
 	Prox_SendMessage(qtv->cluster, prox, msg.data, msg.cursize, dem_read, (unsigned)-1);
 	msg.cursize = 0;
 
