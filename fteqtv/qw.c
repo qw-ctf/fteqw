@@ -4121,7 +4121,7 @@ void ParseQWC(cluster_t *cluster, sv_t *qtv, viewer_t *v, netmsg_t *m)
 			else if (!iscont && !strncmp(buf, "spawn", 5))
 			{
 				char skin[64];
-				sprintf(skin, "%cskins\n", svc_stufftext);
+				sprintf(skin, "%cskins; fog 0\n", svc_stufftext);
 				SendBufferToViewer(v, skin, strlen(skin)+1, true);
 
 				QW_PositionAtIntermission(qtv, v);
