@@ -437,7 +437,7 @@ void Prox_SendPlayerStats(sv_t *qtv, oproxy_t *prox)
 
 		if (msg.cursize)
 		{
-//			Prox_SendMessage(prox, msg.data, msg.cursize, dem_stats|(player<<3), (1<<player));
+			Prox_SendMessage(qtv->cluster, prox, msg.data, msg.cursize, dem_stats|(player<<3), (1<<player));
 			msg.cursize = 0;
 		}
 	}
