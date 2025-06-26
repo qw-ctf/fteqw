@@ -178,8 +178,10 @@ void Fwd_ParseCommands(cluster_t *cluster, oproxy_t *prox)
 void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 {
 	unsigned char *buffer;
-	int length;
+	int length, length2;
 	int bufpos;
+
+        length2 = 666;
 
 //	if (prox->drop)
 //		return;
@@ -205,8 +207,10 @@ void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 
 	if (prox->file)
 		length = fwrite(buffer, 1, length, prox->file);
-	else
+	else {
+                length2 = length;
 		length = send(prox->sock, buffer, length, 0);
+        }
 
 
 	switch (length)
@@ -219,7 +223,7 @@ void Net_TryFlushProxyBuffer(cluster_t *cluster, oproxy_t *prox)
 		length = qerrno;
 		if (length != NET_EWOULDBLOCK && length != NET_EAGAIN)	//not a problem, so long as we can flush it later.
 		{
-			Sys_Printf(cluster, "network error from client proxy\n");
+			Sys_Printf(cluster, "network error from client proxy (errno: %d, send len: %d, bufpos: %d)\n", length, length2, bufpos);
 			prox->drop = true;	//drop them if we get any errors
 			prox->flushing = false;
 		}
@@ -512,7 +516,7 @@ void Net_SendConnectionMVD(sv_t *qtv, oproxy_t *prox)
 {
 	char buffer[MAX_MSGLEN*8];
 	netmsg_t msg;
-	int prespawn;
+	int prespawn, lastprespawn;
 
 	//only send connection data if there's actual data to be sent
 	//if not, the other end will get the data when we receive it anyway.
@@ -527,18 +531,26 @@ void Net_SendConnectionMVD(sv_t *qtv, oproxy_t *prox)
 	Prox_SendMessage(qtv->cluster, prox, msg.data, msg.cursize, dem_read, (unsigned)-1);
 	msg.cursize = 0;
 
-	for (prespawn = 0;prespawn >= 0;)
+	for (lastprespawn = 0, prespawn = 0;prespawn >= 0;)
 	{
 		prespawn = SendList(qtv, prespawn, qtv->map.soundlist, MAX_SOUNDS, svc_soundlist, svcfte_soundlistshort, &msg);
+		if (prespawn == lastprespawn) {
+			Sys_Printf(qtv->cluster, "prespawn svc_soundlist/svcfte_soundlistshort, no progress, last index: %d\n", prespawn);
+		}
 		Prox_SendMessage(qtv->cluster, prox, msg.data, msg.cursize, dem_read, (unsigned)-1);
 		msg.cursize = 0;
+		lastprespawn = prespawn;
 	}
 
-	for (prespawn = 0;prespawn >= 0;)
+	for (lastprespawn = 0, prespawn = 0;prespawn >= 0;)
 	{
 		prespawn = SendList(qtv, prespawn, qtv->map.modellist, MAX_MODELS, svc_modellist, svcfte_modellistshort, &msg);
+		if (prespawn == lastprespawn) {
+			Sys_Printf(qtv->cluster, "prespawn svc_modellist/svcfte_modellistshort, no progress, last index: %d\n", prespawn);
+		}
 		Prox_SendMessage(qtv->cluster, prox, msg.data, msg.cursize, dem_read, (unsigned)-1);
 		msg.cursize = 0;
+		lastprespawn = prespawn;
 	}
 
 	Net_TryFlushProxyBuffer(qtv->cluster, prox);	//that should be enough data to fill a packet.
@@ -546,9 +558,12 @@ void Net_SendConnectionMVD(sv_t *qtv, oproxy_t *prox)
 	for(prespawn = 0;prespawn>=0;)
 	{
 		prespawn = Prespawn(qtv, 0, &msg, prespawn, MAX_CLIENTS-1);
-
+		if (prespawn == lastprespawn) {
+			Sys_Printf(qtv->cluster, "prespawn, no progress, last index: %d\n", prespawn);
+		}
 		Prox_SendMessage(qtv->cluster, prox, msg.data, msg.cursize, dem_read, (unsigned)-1);
 		msg.cursize = 0;
+		lastprespawn = prespawn;
 	}
 
 	//playerstates are delta-compressed, unfortunatly this isn't qwd (thanks to qqshka for showing my folly)
