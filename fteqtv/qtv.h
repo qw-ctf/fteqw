@@ -1002,7 +1002,7 @@ void Netchan_OutOfBand(cluster_t *cluster, netadr_t adr, int length, void *data)
 qboolean Netchan_CanPacket (netchan_t *chan);
 int NET_WebSocketRecv(SOCKET sock, wsrbuf_t *ws, unsigned char *out, unsigned int outlen, int *wslen);
 
-int SendList(sv_t *qtv, int first, const filename_t *list, int svc, netmsg_t *msg);
+int SendList(sv_t *qtv, int first, const filename_t *list, int len, int svc, int widesvc, netmsg_t *msg);
 int Prespawn(sv_t *qtv, int curmsgsize, netmsg_t *msg, int bufnum, int thisplayer);
 
 bsp_t *BSP_LoadModel(cluster_t *cluster, char *gamedir, char *bspname);

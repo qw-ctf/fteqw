@@ -625,13 +625,18 @@ int SendStaticEntities(sv_t *tv, int cursize, netmsg_t *msg, int maxbuffersize, 
 	return i;
 }
 
-int SendList(sv_t *qtv, int first, const filename_t *list, int svc, netmsg_t *msg)
+int SendList(sv_t *qtv, int first, const filename_t *list, int len, int svc, int widesvc, netmsg_t *msg)
 {
 	int i;
 
-	WriteByte(msg, svc);
-	WriteByte(msg, first);
-	for (i = first+1; i < 256; i++)
+	if (first > 0xff) {
+		WriteByte(msg, widesvc);
+		WriteShort(msg, first);
+	} else {
+		WriteByte(msg, svc);
+		WriteByte(msg, first);
+	}
+	for (i = first+1; i < len; i++)
 	{
 //		printf("write %i: %s\n", i, list[i].name);
 		WriteString(msg, list[i].name);
@@ -641,14 +646,14 @@ int SendList(sv_t *qtv, int first, const filename_t *list, int svc, netmsg_t *ms
 			return -1;
 		}
 
-		if (msg->cursize > 768)
-		{	//truncate
+		if (msg->cursize > 768 && ((i-1)&0xff) != 0)
+		{	//truncate as long as count does not become zero
 			i--;
 			break;
 		}
 	}
 	WriteByte(msg, 0);
-	WriteByte(msg, i);
+	WriteByte(msg, i&0xff);
 
 	return i;
 }
@@ -4065,9 +4070,9 @@ void ParseQWC(cluster_t *cluster, sv_t *qtv, viewer_t *v, netmsg_t *m)
 				}
 
 				if (!qtv)
-					SendList(qtv, first, ConnectionlessModelList, svc_modellist, &msg);
+					SendList(qtv, first, ConnectionlessModelList, MAX_MODELS, svc_modellist, svcfte_modellistshort, &msg);
 				else
-					SendList(qtv, first, qtv->map.modellist, svc_modellist, &msg);
+					SendList(qtv, first, qtv->map.modellist, MAX_MODELS, svc_modellist, svcfte_modellistshort, &msg);
 				SendBufferToViewer(v, msg.data, msg.cursize, true);
 			}
 			else if (!iscont && !strncmp(buf, "soundlist ", 10))
@@ -4089,9 +4094,9 @@ void ParseQWC(cluster_t *cluster, sv_t *qtv, viewer_t *v, netmsg_t *m)
 				}
 
 				if (!qtv)
-					SendList(qtv, first, ConnectionlessSoundList, svc_soundlist, &msg);
+					SendList(qtv, first, ConnectionlessSoundList, MAX_SOUNDS, svc_soundlist, svcfte_soundlistshort, &msg);
 				else
-					SendList(qtv, first, qtv->map.soundlist, svc_soundlist, &msg);
+					SendList(qtv, first, qtv->map.soundlist, MAX_SOUNDS, svc_soundlist, svcfte_soundlistshort, &msg);
 				SendBufferToViewer(v, msg.data, msg.cursize, true);
 			}
 			else if (!iscont && !strncmp(buf, "prespawn", 8))
