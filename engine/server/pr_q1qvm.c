@@ -2183,6 +2183,15 @@ static qintptr_t QVM_SetSendNeeded(void *offset, quintptr_t mask, const qintptr_
 	return 0;
 }
 
+//marks an entity as already run for the current server frame, so WPhys_RunEntity skips its physics and think
+static qintptr_t QVM_SkipEntityPhysics(void *offset, quintptr_t mask, const qintptr_t *arg)
+{
+	unsigned int entnum = VM_LONG(arg[0]);
+	if (entnum > 0 && entnum < sv.world.num_edicts)
+		q1qvmprogfuncs.edicttable[entnum]->lastruntime = sv.world.framenum;
+	return 0;
+}
+
 static qintptr_t QVM_VisibleTo_FTE (void *offset, quintptr_t mask, const qintptr_t *arg)
 {
 	unsigned int a0 = VM_LONG(arg[0]);
@@ -2330,6 +2339,7 @@ struct
 	{"clientstat",			QVM_clientstat},	//csqc extension
 	{"pointerstat",			QVM_pointerstat},	//csqc extension
 	{"setsendneeded",		QVM_SetSendNeeded},		//csqc extension
+	{"SkipEntityPhysics",		QVM_SkipEntityPhysics},		//mark ent already-run this frame
 	{"VisibleTo",			QVM_VisibleTo_FTE},		//alternative to mvdsv's visclients hack. redundant now. FIXME: Remove.
 
 	//sql?
